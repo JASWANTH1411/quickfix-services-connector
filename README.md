@@ -107,16 +107,7 @@ The server will boot up at **`http://localhost:5000`**.
 
 ---
 
-## 🔑 Demo Login Credentials
 
-| Role | Email | Password |
-| :--- | :--- | :--- |
-| **Admin** | `j21137202@gmail.com` | `password123` |
-| **Worker (Verified Electrician)** | `rajesh.electrician@gmail.com` | `password123` |
-| **Worker (Verified Plumber)** | `suresh.plumber@gmail.com` | `password123` |
-| **Customer** | `customer@gmail.com` | `password123` |
-
----
 
 ## 📄 License
 This project is licensed under the MIT License.
