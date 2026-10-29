@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Checkout - QuickFix</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <!-- Razorpay SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body class="bg-light">
+
+  <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+    <div class="container">
+      <a class="navbar-brand navbar-brand-logo" href="/index.html"><i class="fa-solid fa-wrench text-primary"></i> QuickFix</a>
+    </div>
+  </nav>
+
+  <div class="container d-flex align-items-center justify-content-center min-vh-100" style="padding-top: 80px;">
+    <div class="card glass-card p-4 p-md-5 shadow-lg border-0" style="max-width: 540px; width: 100%;">
+      <div class="text-center mb-4">
+        <div class="category-icon mx-auto bg-success text-white mb-2"><i class="fa-solid fa-credit-card"></i></div>
+        <h3 class="fw-bold">Payment Checkout</h3>
+        <p class="text-muted small">Choose your preferred payment method</p>
+      </div>
+
+      <div class="bg-light p-3 rounded-3 mb-4">
+        <div class="d-flex justify-content-between mb-1">
+          <span class="text-muted">Booking Reference:</span>
+          <strong id="pay-booking-code" class="text-primary">Loading...</strong>
+        </div>
+        <div class="d-flex justify-content-between mb-1">
+          <span class="text-muted">Service Requested:</span>
+          <strong id="pay-service-name">---</strong>
+        </div>
+        <hr class="my-2">
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="fw-bold fs-5">Amount Due:</span>
+          <span id="pay-total-amount" class="fw-bold fs-3 text-success">₹0.00</span>
+        </div>
+      </div>
+
+      <!-- Payment Methods -->
+      <div class="d-grid gap-3">
+        <button class="btn btn-primary py-3 fw-bold d-flex align-items-center justify-content-between px-4" onclick="payViaRazorpay()">
+          <span><i class="fa-solid fa-bolt me-2"></i> Pay via Razorpay (UPI, Cards, NetBanking)</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+
+        <button class="btn btn-outline-success py-3 fw-bold d-flex align-items-center justify-content-between px-4" onclick="payViaWallet()">
+          <span><i class="fa-solid fa-wallet me-2"></i> Pay via QuickFix Wallet</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+
+        <button class="btn btn-outline-secondary py-3 fw-bold d-flex align-items-center justify-content-between px-4" onclick="payViaCash()">
+          <span><i class="fa-solid fa-money-bill-wave me-2"></i> Pay Cash to Technician</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+
+      <div class="text-center mt-4">
+        <a href="/history.html" class="text-muted small text-decoration-none">Back to Booking History</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/assets/js/main.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script>
+    let currentBooking = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      AuthManager.requireAuth('customer');
+      const urlParams = new URLSearchParams(window.location.search);
+      const bookingId = urlParams.get('booking_id');
+
+      if (!bookingId) {
+        window.location.href = '/history.html';
+        return;
+      }
+
+      try {
+        const res = await fetchAPI(`/bookings/${bookingId}`);
+        currentBooking = res.data;
+        document.getElementById('pay-booking-code').innerText = currentBooking.booking_code;
+        document.getElementById('pay-service-name').innerText = currentBooking.service_name;
+        document.getElementById('pay-total-amount').innerText = formatCurrency(currentBooking.total_amount);
+      } catch (err) {
+        showAlert('Error', err.message, 'error');
+      }
+    });
+
+    async function payViaRazorpay() {
+      if (!currentBooking) return;
+      try {
+        const res = await fetchAPI('/payments/razorpay/order', {
+          method: 'POST',
+          body: JSON.stringify({ booking_id: currentBooking.id })
+        });
+
+        const options = {
+          key: res.data.key_id,
+          amount: res.data.amount * 100,
+          currency: 'INR',
+          name: 'QuickFix Platform',
+          description: `Payment for ${currentBooking.service_name}`,
+          order_id: res.data.order_id,
+          handler: async function (response) {
+            await fetchAPI('/payments/razorpay/verify', {
+              method: 'POST',
+              body: JSON.stringify({
+                booking_id: currentBooking.id,
+                razorpay_order_id: response.razorpay_order_id || res.data.order_id,
+                razorpay_payment_id: response.razorpay_payment_id || 'pay_demo_123',
+                razorpay_signature: response.razorpay_signature || 'sig_demo_123'
+              })
+            });
+            showAlert('Payment Complete!', 'Thank you! Your payment was verified.', 'success').then(() => {
+              window.location.href = '/history.html';
+            });
+          }
+        };
+
+        if (typeof Razorpay !== 'undefined') {
+          const rzp = new Razorpay(options);
+          rzp.open();
+        } else {
+          // Demo fallback
+          options.handler({ razorpay_order_id: res.data.order_id, razorpay_payment_id: 'pay_demo_123', razorpay_signature: 'sig_demo_123' });
+        }
+      } catch (err) {
+        showAlert('Payment Failed', err.message, 'error');
+      }
+    }
+
+    async function payViaWallet() {
+      if (!currentBooking) return;
+      try {
+        await fetchAPI('/payments/pay-direct', {
+          method: 'POST',
+          body: JSON.stringify({ booking_id: currentBooking.id, payment_method: 'wallet' })
+        });
+        showAlert('Paid via Wallet!', 'Payment deducted from your QuickFix wallet.', 'success').then(() => {
+          window.location.href = '/history.html';
+        });
+      } catch (err) {
+        showAlert('Wallet Payment Error', err.message, 'error');
+      }
+    }
+
+    async function payViaCash() {
+      if (!currentBooking) return;
+      try {
+        await fetchAPI('/payments/pay-direct', {
+          method: 'POST',
+          body: JSON.stringify({ booking_id: currentBooking.id, payment_method: 'cash' })
+        });
+        showAlert('Cash Selected', 'Please pay the cash amount directly to your technician upon work completion.', 'success').then(() => {
+          window.location.href = '/history.html';
+        });
+      } catch (err) {
+        showAlert('Error', err.message, 'error');
+      }
+    }
+  </script>
+</body>
+</html>

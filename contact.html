@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Support - QuickFix</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+    <div class="container">
+      <a class="navbar-brand navbar-brand-logo" href="/index.html"><i class="fa-solid fa-wrench text-primary"></i> QuickFix</a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav mx-auto">
+          <li class="nav-item"><a class="nav-link nav-link-custom" href="/index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link nav-link-custom" href="/services.html">Services</a></li>
+          <li class="nav-item"><a class="nav-link nav-link-custom" href="/about.html">About Us</a></li>
+          <li class="nav-item"><a class="nav-link nav-link-custom active" href="/contact.html">Contact</a></li>
+        </ul>
+        <div id="nav-auth-container" class="d-flex align-items-center"></div>
+      </div>
+    </div>
+  </nav>
+
+  <section class="hero-section text-center pb-4" style="padding-top: 130px;">
+    <div class="container">
+      <h1 class="fw-bold display-5 mb-3">Get In Touch With QuickFix</h1>
+      <p class="text-muted fs-5">We are available 24/7 to assist with your bookings, complaints, or inquiries</p>
+    </div>
+  </section>
+
+  <section class="py-5">
+    <div class="container">
+      <div class="row g-5">
+        <div class="col-lg-5">
+          <div class="card glass-card p-4 h-100">
+            <h4 class="fw-bold mb-4">Support Channels</h4>
+            <div class="d-flex align-items-center gap-3 mb-4">
+              <div class="category-icon mb-0 bg-primary text-white"><i class="fa-solid fa-headset"></i></div>
+              <div>
+                <h6 class="fw-bold mb-0">Toll Free Support</h6>
+                <p class="text-muted mb-0">+91 1800-QUICKFIX</p>
+              </div>
+            </div>
+            <div class="d-flex align-items-center gap-3 mb-4">
+              <div class="category-icon mb-0 bg-success text-white"><i class="fa-solid fa-envelope"></i></div>
+              <div>
+                <h6 class="fw-bold mb-0">Email Assistance</h6>
+                <p class="text-muted mb-0">support@quickfix.com</p>
+              </div>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+              <div class="category-icon mb-0 bg-warning text-white"><i class="fa-solid fa-location-dot"></i></div>
+              <div>
+                <h6 class="fw-bold mb-0">Headquarters</h6>
+                <p class="text-muted mb-0">Tech Hub Park, Andheri East, Mumbai 400069</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-7">
+          <div class="card glass-card p-4">
+            <h4 class="fw-bold mb-4">Send Us a Message</h4>
+            <form id="contact-form" onsubmit="handleContactSubmit(event)">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">Your Name</label>
+                  <input type="text" id="c-name" class="form-control" placeholder="John Doe" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">Email Address</label>
+                  <input type="email" id="c-email" class="form-control" placeholder="john@example.com" required>
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold">Subject</label>
+                  <input type="text" id="c-subject" class="form-control" placeholder="Booking query, billing problem..." required>
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold">Message</label>
+                  <textarea id="c-message" class="form-control" rows="4" placeholder="Explain your problem..." required></textarea>
+                </div>
+                <div class="col-12 mt-4">
+                  <button type="submit" class="btn btn-primary-custom px-5 py-2">Submit Support Ticket</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/assets/js/main.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script>
+    function handleContactSubmit(e) {
+      e.preventDefault();
+      showAlert('Ticket Created!', 'Thank you! Your support ticket has been received. Our team will contact you shortly.', 'success');
+      document.getElementById('contact-form').reset();
+    }
+  </script>
+</body>
+</html>

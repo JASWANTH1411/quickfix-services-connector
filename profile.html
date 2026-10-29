@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Profile - QuickFix</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body class="bg-light">
+
+  <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+    <div class="container">
+      <a class="navbar-brand navbar-brand-logo" href="/index.html"><i class="fa-solid fa-wrench text-primary"></i> QuickFix</a>
+      <div id="nav-auth-container" class="ms-auto"></div>
+    </div>
+  </nav>
+
+  <div class="container py-5" style="margin-top: 80px;">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card glass-card p-4 p-md-5 border-0 shadow-lg">
+          <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+            <div>
+              <h3 class="fw-bold mb-1"><i class="fa-solid fa-user-gear text-primary me-2"></i> Interactive Profile & Security</h3>
+              <p class="text-muted small mb-0">Update your profile details, avatar photo, and address</p>
+            </div>
+            <span class="badge bg-success-subtle text-success fw-bold px-3 py-2"><i class="fa-solid fa-shield-check me-1"></i> Account Active</span>
+          </div>
+
+          <form id="profile-form" onsubmit="handleProfileSubmit(event)">
+            <!-- Interactive Avatar Ring & Face Preview -->
+            <div class="text-center mb-4">
+              <div class="position-relative d-inline-block">
+                <div class="avatar-face-ring" style="padding: 5px; cursor: pointer;" onclick="document.getElementById('prof-avatar').click()">
+                  <img id="avatar-preview" src="/uploads/profile/default-user.png" class="avatar-face-img" style="width: 120px; height: 120px;" alt="User Face Avatar">
+                  <span class="online-pulse-dot" style="width: 20px; height: 20px; right: 8px; bottom: 8px;"></span>
+                </div>
+                <label for="prof-avatar" class="btn btn-sm btn-primary-custom rounded-circle position-absolute bottom-0 end-0 p-2 shadow" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;" title="Upload New Photo">
+                  <i class="fa-solid fa-camera text-white"></i>
+                </label>
+                <input type="file" id="prof-avatar" class="d-none" accept="image/*" onchange="previewAvatar(event)">
+              </div>
+              <div class="small text-muted mt-2 fw-semibold">Click avatar ring to upload a new profile photo</div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Full Name *</label>
+                <input type="text" id="prof-name" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Email Address (Verified)</label>
+                <input type="email" id="prof-email" class="form-control bg-light" readonly>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Phone Number *</label>
+                <input type="tel" id="prof-phone" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">City</label>
+                <input type="text" id="prof-city" class="form-control">
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Full Address</label>
+                <input type="text" id="prof-address" class="form-control">
+              </div>
+            </div>
+
+            <div class="d-flex gap-3 mt-4 pt-3 border-top">
+              <button type="submit" class="btn btn-primary-custom px-5 py-3 fw-bold"><i class="fa-solid fa-floppy-disk me-2"></i> Save Profile Changes</button>
+              <a href="/customer/dashboard.html" class="btn btn-outline-secondary px-4 py-3 fw-bold rounded-pill">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/assets/js/main.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      AuthManager.requireAuth();
+      await loadProfile();
+    });
+
+    async function loadProfile() {
+      try {
+        const res = await fetchAPI('/customers/profile');
+        const user = res.data;
+        document.getElementById('prof-name').value = user.name || '';
+        document.getElementById('prof-email').value = user.email || '';
+        document.getElementById('prof-phone').value = user.phone || '';
+        document.getElementById('prof-city').value = user.city || '';
+        document.getElementById('prof-address').value = user.address || '';
+        if (user.avatar) document.getElementById('avatar-preview').src = user.avatar;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function previewAvatar(e) {
+      const file = e.target.files[0];
+      if (file) {
+        document.getElementById('avatar-preview').src = URL.createObjectURL(file);
+      }
+    }
+
+    async function handleProfileSubmit(e) {
+      e.preventDefault();
+      try {
+        const formData = new FormData();
+        formData.append('name', document.getElementById('prof-name').value);
+        formData.append('phone', document.getElementById('prof-phone').value);
+        formData.append('city', document.getElementById('prof-city').value);
+        formData.append('address', document.getElementById('prof-address').value);
+
+        const avatarFile = document.getElementById('prof-avatar').files[0];
+        if (avatarFile) formData.append('avatar', avatarFile);
+
+        await fetchAPI('/customers/profile', {
+          method: 'PUT',
+          body: formData
+        });
+
+        showToast('success', 'Profile updated successfully!');
+      } catch (err) {
+        showAlert('Error', err.message, 'error');
+      }
+    }
+  </script>
+</body>
+</html>

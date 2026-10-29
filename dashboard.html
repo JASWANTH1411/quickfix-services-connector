@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - QuickFix Control Center</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="stylesheet" href="/assets/css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="/index.html" class="sidebar-brand">
+          <i class="fa-solid fa-user-shield text-primary"></i> <span>QuickFix Admin</span>
+        </a>
+      </div>
+      <ul class="sidebar-menu">
+        <li class="sidebar-item">
+          <a href="/admin/dashboard.html" class="sidebar-link active"><i class="fa-solid fa-chart-line"></i> <span>Analytics Hub</span></a>
+        </li>
+      </ul>
+      <div class="p-3 border-top border-secondary">
+        <button class="btn btn-outline-danger w-100 rounded-pill fw-bold" onclick="AuthManager.logout()"><i class="fa-solid fa-right-from-bracket me-2"></i> Logout</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <h4 class="fw-bold mb-0">Platform Control Center</h4>
+          <small class="text-muted">Real-time system stats, verification approvals & analytics</small>
+        </div>
+        <div class="user-profile-badge">
+          <span class="badge bg-danger px-3 py-2 fw-bold">SUPER ADMIN</span>
+        </div>
+      </header>
+
+      <!-- KPI Overview Row -->
+      <div class="row g-4 mb-4">
+        <div class="col-md-3">
+          <div class="kpi-card">
+            <div>
+              <small class="text-muted fw-bold text-uppercase">Total Customers</small>
+              <h3 class="fw-bold mb-0 mt-1" id="adm-cust-count">0</h3>
+            </div>
+            <div class="kpi-icon bg-kpi-blue"><i class="fa-solid fa-users"></i></div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="kpi-card">
+            <div>
+              <small class="text-muted fw-bold text-uppercase">Total Workers</small>
+              <h3 class="fw-bold mb-0 mt-1" id="adm-work-count">0</h3>
+            </div>
+            <div class="kpi-icon bg-kpi-purple"><i class="fa-solid fa-user-gear"></i></div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="kpi-card">
+            <div>
+              <small class="text-muted fw-bold text-uppercase">Total Revenue</small>
+              <h3 class="fw-bold mb-0 mt-1 text-success" id="adm-revenue">₹0.00</h3>
+            </div>
+            <div class="kpi-icon bg-kpi-green"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="kpi-card">
+            <div>
+              <small class="text-muted fw-bold text-uppercase">Platform Commission</small>
+              <h3 class="fw-bold mb-0 mt-1 text-primary" id="adm-commission">₹0.00</h3>
+            </div>
+            <div class="kpi-icon bg-kpi-orange"><i class="fa-solid fa-coins"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+          <div class="card glass-card p-4">
+            <h5 class="fw-bold mb-3"><i class="fa-solid fa-chart-area text-primary me-2"></i> Monthly Revenue & Commission Growth</h5>
+            <canvas id="revenueChart" height="240"></canvas>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card glass-card p-4">
+            <h5 class="fw-bold mb-3"><i class="fa-solid fa-chart-pie text-primary me-2"></i> Popular Categories</h5>
+            <canvas id="categoryChart" height="240"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending Customer Booking Approvals Table -->
+      <div class="card glass-card p-4 mb-4 border-2 border-primary">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i> Pending Customer Booking Requests (Awaiting Admin Approval)</h5>
+          <span class="badge bg-danger px-3 py-2 fw-bold" id="pending-jobs-badge">0 Requests</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Booking Code</th>
+                <th>Customer</th>
+                <th>Service & Category</th>
+                <th>Area Pincode</th>
+                <th>Amount</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="pending-jobs-table">
+              <!-- Dynamic Rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pending Worker Approvals Table -->
+      <div class="card glass-card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0"><i class="fa-solid fa-user-check text-warning me-2"></i> Pending Worker Verification Requests</h5>
+          <span class="badge bg-warning text-dark px-3 py-2 fw-bold" id="pending-badge">0 Pending</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Worker Name</th>
+                <th>Category</th>
+                <th>Phone</th>
+                <th>Documents Submitted</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="pending-workers-table">
+              <!-- Dynamic Rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Withdrawal Requests Table -->
+      <div class="card glass-card p-4">
+        <h5 class="fw-bold mb-3"><i class="fa-solid fa-money-bill-transfer text-success me-2"></i> Worker Wallet Withdrawal Requests</h5>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Worker</th>
+                <th>Amount</th>
+                <th>Bank Account</th>
+                <th>IFSC</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="withdraw-table-body">
+              <!-- Dynamic Rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/assets/js/main.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script>
+    let revenueChartInstance = null;
+    let categoryChartInstance = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      AuthManager.requireAuth('admin');
+      await loadAdminAnalytics();
+      await loadPendingBookings();
+      await loadPendingWorkers();
+      await loadWithdrawRequests();
+    });
+
+    async function loadPendingBookings() {
+      const tbody = document.getElementById('pending-jobs-table');
+      try {
+        const res = await fetchAPI('/admin/pending-bookings');
+        const jobs = res.data || [];
+        document.getElementById('pending-jobs-badge').innerText = `${jobs.length} Pending Approval`;
+
+        if (jobs.length > 0) {
+          tbody.innerHTML = jobs.map(j => `
+            <tr>
+              <td class="fw-bold text-primary">${j.booking_code}</td>
+              <td>
+                <div class="fw-bold">${j.customer_name}</div>
+                <small class="text-muted">${j.customer_phone}</small>
+              </td>
+              <td>
+                <div class="fw-bold">${j.service_name}</div>
+                <span class="badge bg-primary-subtle text-primary">${j.category_name}</span>
+              </td>
+              <td>
+                <div class="fw-bold">${j.customer_pincode || '400001'}</div>
+                <small class="text-muted">${j.customer_city || 'Mumbai'}</small>
+              </td>
+              <td class="fw-bold text-success">${formatCurrency(j.total_amount)}</td>
+              <td>
+                <button class="btn btn-sm btn-success me-1 fw-bold" onclick="approveBookingJob(${j.id})"><i class="fa-solid fa-paper-plane me-1"></i> Approve & Broadcast</button>
+                <button class="btn btn-sm btn-outline-danger fw-bold" onclick="rejectBookingJob(${j.id})">Reject</button>
+              </td>
+            </tr>
+          `).join('');
+        } else {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center py-3 text-muted">No pending customer job requests.</td></tr>`;
+        }
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${err.message}</td></tr>`;
+      }
+    }
+
+    async function approveBookingJob(bookingId) {
+      try {
+        const res = await fetchAPI('/admin/bookings/approve', {
+          method: 'POST',
+          body: JSON.stringify({ booking_id: bookingId })
+        });
+        showToast('success', res.message || 'Approved & Broadcasted!');
+        loadPendingBookings();
+        loadAdminAnalytics();
+      } catch (err) {
+        showAlert('Error', err.message, 'error');
+      }
+    }
+
+    async function rejectBookingJob(bookingId) {
+      const { value: reason } = await Swal.fire({
+        title: 'Reject Booking',
+        input: 'text',
+        inputLabel: 'Rejection Reason',
+        inputPlaceholder: 'Service unavailable in pincode area...',
+        showCancelButton: true
+      });
+
+      if (reason) {
+        try {
+          await fetchAPI('/admin/bookings/reject', {
+            method: 'POST',
+            body: JSON.stringify({ booking_id: bookingId, rejection_reason: reason })
+          });
+          showToast('info', 'Booking request rejected.');
+          loadPendingBookings();
+        } catch (err) {
+          showAlert('Error', err.message, 'error');
+        }
+      }
+    }
+
+    async function loadAdminAnalytics() {
+      try {
+        const res = await fetchAPI('/admin/analytics');
+        const summary = res.data.summary;
+        document.getElementById('adm-cust-count').innerText = summary.total_customers;
+        document.getElementById('adm-work-count').innerText = summary.total_workers;
+        document.getElementById('adm-revenue').innerText = formatCurrency(summary.total_revenue);
+        document.getElementById('adm-commission').innerText = formatCurrency(summary.total_commission);
+        document.getElementById('pending-badge').innerText = `${summary.pending_worker_approvals} Pending`;
+
+        renderCharts(res.data.charts);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function renderCharts(chartsData) {
+      // Area Chart for Revenue
+      const ctxRev = document.getElementById('revenueChart').getContext('2d');
+      const labels = chartsData.monthly_revenue.length > 0 ? chartsData.monthly_revenue.map(r => r.month_year) : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+      const revData = chartsData.monthly_revenue.length > 0 ? chartsData.monthly_revenue.map(r => r.revenue) : [12000, 19000, 25000, 32000, 45000, 58000];
+      const commData = chartsData.monthly_revenue.length > 0 ? chartsData.monthly_revenue.map(r => r.commission) : [1800, 2850, 3750, 4800, 6750, 8700];
+
+      if (revenueChartInstance) revenueChartInstance.destroy();
+      revenueChartInstance = new Chart(ctxRev, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Total Revenue (₹)', data: revData, borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', fill: true, tension: 0.3 },
+            { label: 'Platform Commission (₹)', data: commData, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.3 }
+          ]
+        }
+      });
+
+      // Pie Chart for Categories
+      const ctxCat = document.getElementById('categoryChart').getContext('2d');
+      const catLabels = chartsData.category_distribution.length > 0 ? chartsData.category_distribution.map(c => c.category_name) : ['Electrician', 'Plumber', 'AC Repair', 'Cleaner'];
+      const catData = chartsData.category_distribution.length > 0 ? chartsData.category_distribution.map(c => c.booking_count) : [35, 25, 20, 20];
+
+      if (categoryChartInstance) categoryChartInstance.destroy();
+      categoryChartInstance = new Chart(ctxCat, {
+        type: 'doughnut',
+        data: {
+          labels: catLabels,
+          datasets: [{ data: catData, backgroundColor: ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b'] }]
+        }
+      });
+    }
+
+    async function loadPendingWorkers() {
+      const tbody = document.getElementById('pending-workers-table');
+      try {
+        const res = await fetchAPI('/admin/pending-workers');
+        if (res.data && res.data.length > 0) {
+          tbody.innerHTML = res.data.map(w => `
+            <tr>
+              <td class="fw-bold">${w.name}</td>
+              <td><span class="badge bg-primary-subtle text-primary">${w.category_name}</span></td>
+              <td>${w.phone}</td>
+              <td>
+                <span class="badge bg-secondary">Aadhaar: ${w.aadhaar_number || 'Uploaded'}</span>
+                <span class="badge bg-secondary">PAN: ${w.pan_number || 'Uploaded'}</span>
+              </td>
+              <td>${formatDate(w.submitted_at)}</td>
+              <td>
+                <button class="btn btn-sm btn-success me-1 fw-bold" onclick="processWorker(${w.id}, 'verified')"><i class="fa-solid fa-check me-1"></i> Approve</button>
+                <button class="btn btn-sm btn-outline-danger fw-bold" onclick="processWorker(${w.id}, 'rejected')">Reject</button>
+              </td>
+            </tr>
+          `).join('');
+        } else {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center py-3 text-muted">No pending worker approvals.</td></tr>`;
+        }
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${err.message}</td></tr>`;
+      }
+    }
+
+    async function processWorker(workerId, status) {
+      try {
+        await fetchAPI('/admin/verify-worker', {
+          method: 'POST',
+          body: JSON.stringify({ worker_id: workerId, status })
+        });
+        showToast('success', `Worker ${status.toUpperCase()}!`);
+        loadPendingWorkers();
+        loadAdminAnalytics();
+      } catch (err) {
+        showAlert('Error', err.message, 'error');
+      }
+    }
+
+    async function loadWithdrawRequests() {
+      const tbody = document.getElementById('withdraw-table-body');
+      try {
+        const res = await fetchAPI('/admin/withdraw-requests');
+        if (res.data && res.data.length > 0) {
+          tbody.innerHTML = res.data.map(wr => `
+            <tr>
+              <td class="fw-bold">${wr.worker_name}</td>
+              <td class="fw-bold text-success">${formatCurrency(wr.amount)}</td>
+              <td>${wr.bank_account}</td>
+              <td>${wr.ifsc}</td>
+              <td><span class="badge-status badge-${wr.status}">${wr.status}</span></td>
+              <td>
+                ${wr.status === 'pending' ? `
+                  <button class="btn btn-sm btn-success me-1 fw-bold" onclick="processWithdraw(${wr.id}, 'approved')">Approve Transfer</button>
+                  <button class="btn btn-sm btn-outline-danger fw-bold" onclick="processWithdraw(${wr.id}, 'rejected')">Reject</button>
+                ` : '<span>Done</span>'}
+              </td>
+            </tr>
+          `).join('');
+        } else {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center py-3 text-muted">No pending withdrawal requests.</td></tr>`;
+        }
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${err.message}</td></tr>`;
+      }
+    }
+
+    async function processWithdraw(requestId, status) {
+      try {
+        await fetchAPI('/admin/withdraw-requests/process', {
+          method: 'POST',
+          body: JSON.stringify({ request_id: requestId, status })
+        });
+        showToast('success', `Withdrawal ${status.toUpperCase()}!`);
+        loadWithdrawRequests();
+      } catch (err) {
+        showAlert('Error', err.message, 'error');
+      }
+    }
+  </script>
+</body>
+</html>
